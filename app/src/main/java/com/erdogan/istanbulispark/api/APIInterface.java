@@ -2,6 +2,7 @@ package com.erdogan.istanbulispark.api;
 
 
 import com.erdogan.istanbulispark.models.ParkDetail;
+import com.erdogan.istanbulispark.models.Tarifeler;
 
 import java.util.List;
 
@@ -9,6 +10,7 @@ import io.reactivex.Observable;
 import retrofit2.http.GET;
 import retrofit2.http.Headers;
 import retrofit2.http.Path;
+import retrofit2.http.Query;
 
 public interface APIInterface {
 
@@ -17,7 +19,10 @@ public interface APIInterface {
     @GET("ispark/park")
     Observable<List<ParkDetail>> getPark();
 
+    //ispark/ParkDetay
 
+    @GET("ispark/ParkDetay")
+    Observable<List<Tarifeler>> getCosts(@Query("id") int id);
    /* @Headers("Mailsac-Key: dd1UmasIwgabXuD0KWV6snOP")
     @GET("addresses/{getUserMailMessage}/messages")
     //@GET("users/{user_id}/playlists")
