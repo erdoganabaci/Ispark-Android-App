@@ -20,6 +20,7 @@ import com.erdogan.istanbulispark.api.ApiRequest;
 import com.erdogan.istanbulispark.models.ParkDetail;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import io.reactivex.Observable;
@@ -36,6 +37,8 @@ public class MainActivity extends AppCompatActivity {
     ArrayAdapter<String> adapter ;
     EditText filterParkEditText;
     ProgressBar isparkProgressBar;
+    HashMap<String, String> parkForMain;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
         filterParkEditText = findViewById(R.id.filterParkEditText);
         //progressbar
         isparkProgressBar = findViewById(R.id.isparkProgressBar);
+        parkForMain= new HashMap<String, String>();
         parkAdiList = new ArrayList<>();
         loadPark();
 
@@ -78,7 +82,8 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(),MyParkObject.toString(),Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(getApplicationContext(),DetailParkActivity.class);
                 intent.putExtra("parkNameFromMain",MyParkObject.toString());
-                startActivity(intent);
+                intent.putExtra("parkIDFromMain",parkForMain.get(MyParkObject.toString()));
+                //startActivity(intent);
 
             }
         });
@@ -102,11 +107,12 @@ public class MainActivity extends AppCompatActivity {
                                public void onNext(List<ParkDetail> park) {
                                    for (int i = 0; i < park.size(); i++) {
                                        String parkAdi = park.get(i).parkAdi;
+                                       String parkID = park.get(i).parkID.toString();
                                        parkAdiList.add(park.get(i).parkAdi);
                                        //view.showRestaurants(localList);
                                        Log.d(TAG, "erdo" + parkAdi);
                                        //Log.d(TAG, "park adları " + parkAdiList);
-
+                                       parkForMain.put(parkAdi,parkID);
 
 
                                    }

@@ -9,10 +9,21 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.erdogan.istanbulispark.api.APIInterface;
 import com.erdogan.istanbulispark.api.ApiRequest;
 import com.erdogan.istanbulispark.models.ParkDetail;
+import com.erdogan.istanbulispark.models.ParkDetailExtra;
 import com.erdogan.istanbulispark.models.Tarifeler;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,18 +39,27 @@ public class DetailParkActivity extends AppCompatActivity {
     TextView isparkDetailtextView;
     ArrayList<String> parkAdiListDetail;
     String isparkName;
+    String isparkParkID;
+
+    private RequestQueue mQueue;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail_park);
 
-        isparkDetailtextView = findViewById(R.id.isparkDetailtextView);
+        //isparkDetailtextView = findViewById(R.id.isparkDetailtextView);
 
         Intent intent = getIntent();
         isparkName = intent.getStringExtra("parkNameFromMain");
+        isparkParkID = intent.getStringExtra("parkIDFromMain");
+        Log.d(TAG, "parkIDFromMain: " + isparkParkID);
+
+        mQueue = Volley.newRequestQueue(this);
 
         getParkDetail();
-        getParkCost();
+        //getParkCost();
+        volleyTarife(isparkParkID);
     }
 
 
@@ -81,7 +101,7 @@ public class DetailParkActivity extends AppCompatActivity {
 
                                                //String combine = "Park Adı: "+parkAdi+"\n"+"İlçe: "+ilce;
                                                //park.get(i).ilce;
-                                               isparkDetailtextView.setText(combine);
+                                               //isparkDetailtextView.setText(combine);
                                                //Log.d(TAG, "erdo " + ilce);
 
                                            }
@@ -110,26 +130,27 @@ public class DetailParkActivity extends AppCompatActivity {
     }
 
 
-    public void getParkCost() {
+    /*public void getParkCost() {
         APIInterface apiInterface = ApiRequest.getApiService();
-        Observable<List<Tarifeler>> exampleCall = apiInterface.getCosts(395);
+        Observable<List<ParkDetailExtra>> exampleCall = apiInterface.getCosts(395);
         exampleCall.subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Observer<List<Tarifeler>>()  {
+                .subscribe(new Observer<List<ParkDetailExtra>>()  {
                                @Override
                                public void onSubscribe(Disposable d) {
 
                                }
 
                                @Override
-                               public void onNext(List<Tarifeler> cost) {
+                               public void onNext(List<ParkDetailExtra> cost) {
                                    for (int i = 0; i < cost.size(); i++) {
-                                       String tarife = cost.get(i).tarife;
+                                       List<Tarifeler> tarife = cost.get(i).tarifeler;
                                        Log.d(TAG, "tarife " + tarife);
 
 
 
                                    }
+                                   Log.d(TAG, "tarife " + cost);
 
 
                                }
@@ -148,5 +169,36 @@ public class DetailParkActivity extends AppCompatActivity {
                                }
                            }
                 );
+    }*/
+
+
+    public void volleyTarife(String parkID )
+    {
+        String url = "https://api.ibb.gov.tr/ispark/ParkDetay?id="+parkID;
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        try {
+                            JSONArray jsonArray = response.getJSONArray("Tarifeler");
+                            for (int i = 0; i < jsonArray.length(); i++) {
+                                JSONObject parkDetail = jsonArray.getJSONObject(i);
+                                String tarife = parkDetail.getString("Tarife");
+                                String fiyat = parkDetail.getString("Fiyat");
+                                //mTextViewResult.append(firstName + ", " + String.valueOf(age) + ", " + mail + "\n\n");
+                                Log.d(TAG, "tarife " + tarife+" Fiyat: "+fiyat);
+
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                error.printStackTrace();
+            }
+        });
+        mQueue.add(request);
     }
 }

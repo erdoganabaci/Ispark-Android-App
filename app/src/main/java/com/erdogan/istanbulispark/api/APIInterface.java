@@ -2,6 +2,7 @@ package com.erdogan.istanbulispark.api;
 
 
 import com.erdogan.istanbulispark.models.ParkDetail;
+import com.erdogan.istanbulispark.models.ParkDetailExtra;
 import com.erdogan.istanbulispark.models.Tarifeler;
 
 import java.util.List;
@@ -22,7 +23,7 @@ public interface APIInterface {
     //ispark/ParkDetay
 
     @GET("ispark/ParkDetay")
-    Observable<List<Tarifeler>> getCosts(@Query("id") int id);
+    Observable<List<ParkDetailExtra>> getCosts(@Query("id") int id);
    /* @Headers("Mailsac-Key: dd1UmasIwgabXuD0KWV6snOP")
     @GET("addresses/{getUserMailMessage}/messages")
     //@GET("users/{user_id}/playlists")
