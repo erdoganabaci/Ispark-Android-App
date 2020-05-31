@@ -1,5 +1,6 @@
 package com.erdogan.istanbulispark;
 
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
@@ -9,10 +10,13 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.hardware.SensorManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
@@ -36,10 +40,14 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterItem;
 import com.google.maps.android.clustering.ClusterManager;
+import com.squareup.seismic.ShakeDetector;
 import com.tbruyelle.rxpermissions2.RxPermissions;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import io.reactivex.Observable;
 import io.reactivex.Observer;
@@ -47,7 +55,7 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, ClusterManager.OnClusterClickListener<ParkClusterModel>,
+public class MapsActivity extends FragmentActivity implements ShakeDetector.Listener, OnMapReadyCallback, ClusterManager.OnClusterClickListener<ParkClusterModel>,
         ClusterManager.OnClusterItemClickListener<ParkClusterModel>,
         ClusterManager.OnClusterItemInfoWindowClickListener<ParkClusterModel> {
     private static final String TAG = "MapsActivity";
@@ -58,7 +66,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     LocationListener locationListener;
     FloatingActionButton fabMainButton;
     ArrayList<ParkClusterModel> clusterItems;
-
+    Vibrator vibrator;
+    LatLng userLastLocation;
+    String nearIsparkName;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,6 +89,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
+        //shake detector
+        SensorManager sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+
+        ShakeDetector shakeDetector = new ShakeDetector(this);
+
+        shakeDetector.start(sensorManager);
+
+        //vibrator for shake
+        vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
     }
 
     public void getLocationRequest(LocationManager locationManager,LocationListener locationListener) {
@@ -99,7 +118,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 50, locationListener);
                         if (locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER) != null){
                             Location lastLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                            LatLng userLastLocation = new LatLng(lastLocation.getLatitude(),lastLocation.getLongitude());
+                            userLastLocation = new LatLng(lastLocation.getLatitude(),lastLocation.getLongitude());
                             //mMap.addMarker(new MarkerOptions().position(userLastLocation).title("Buradayım"));
                             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLastLocation,7));
                         }
@@ -168,6 +187,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void getIsparkLocation(GoogleMap mMap){
+        Map<String, Float> nearDistanceHashMap = new HashMap<String, Float>();
 
         ClusterManager<ParkClusterModel> clusterManager = new ClusterManager(this, mMap);  // 3
         mMap.setOnCameraIdleListener(clusterManager);
@@ -189,6 +209,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                                }
 
+                               @RequiresApi(api = Build.VERSION_CODES.N)
                                @Override
                                public void onNext(List<ParkDetail> park) {
                                    for (int i = 0; i < park.size(); i++) {
@@ -203,6 +224,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                                        LatLng isparkLocate= new LatLng(latituteDouble,longitudeDouble);
                                        //mMap.addMarker(new MarkerOptions().position(isparkLocate).title(parkAdi).snippet("Detaylar:"+parkKapasite.toString()+"\nBoş Kapasite: "+parkBosKapasite.toString())).setIcon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_park_adaptive));
+
+                                       //calculate nearest-shortest location
+                                       float nearestDistance = nearestLocation(userLastLocation.latitude,userLastLocation.longitude,isparkLocate.latitude,isparkLocate.longitude);
+                                       nearDistanceHashMap.put(parkAdi,nearestDistance);
+
 
                                        clusterItems.add(new ParkClusterModel(parkAdi,isparkLocate));
 
@@ -220,7 +246,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                        mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
                                            @Override
                                            public void onInfoWindowClick(Marker marker) {
-                                               Toast.makeText(getApplicationContext(),marker.getSnippet().toString(),Toast.LENGTH_LONG).show();
+                                               //Toast.makeText(getApplicationContext(),marker.getSnippet(),Toast.LENGTH_LONG).show();
                                                Intent intent = new Intent(getApplicationContext(),DetailParkActivity.class);
                                                intent.putExtra("parkNameFromMain",marker.getTitle());
                                                startActivity(intent);
@@ -230,6 +256,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
                                    }
+                                   //Log.d(TAG, "onNext hashmap distance: "+nearDistanceHashMap);
+                                   Float min = Collections.min(nearDistanceHashMap.values());
+                                   //String hashMapkey = String.valueOf(nearDistanceHashMap.get(min));
+
+                                   nearDistanceHashMap.forEach((key, value) -> {
+                                       if (value.equals(min)) {
+                                           Log.d(TAG, "hashmap key: "+key);
+                                           nearIsparkName = key;
+                                       }
+                                   });
+
+
+
 
                                    mMap.setOnMarkerClickListener(clusterManager);
                                    //mMap.setInfoWindowAdapter(clusterManager.getMarkerManager());
@@ -335,5 +374,33 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onClusterItemInfoWindowClick(ParkClusterModel parkClusterModel) {
 
+    }
+
+    //for shake detector
+
+    @Override
+    public void hearShake() {
+        vibrator.vibrate(500);
+        Toast.makeText(this,"En Yakın Park Bulundu.",Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(getApplicationContext(),DetailParkActivity.class);
+        intent.putExtra("parkNameFromMain",nearIsparkName);
+        startActivity(intent);
+
+    }
+
+    public float nearestLocation(Double userLocationLat ,Double userLocationLon ,Double isparkLocationLat, Double isparkLocationLon ){
+
+        Location locationA = new Location("point A");
+
+        locationA.setLatitude(userLocationLat);
+        locationA.setLongitude(userLocationLon);
+
+        Location locationB = new Location("point B");
+
+        locationB.setLatitude(isparkLocationLat);
+        locationB.setLongitude(isparkLocationLon);
+
+        float distance = locationA.distanceTo(locationB);
+        return  distance;
     }
 }

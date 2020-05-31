@@ -165,4 +165,18 @@
 
     </androidx.cardview.widget.CardView>
 
+    <Button
+        android:id="@+id/sendDetailGoogleMapButton"
+        android:layout_width="250dp"
+        android:layout_height="55dp"
+        android:layout_marginTop="32dp"
+        android:background="@drawable/rounded_button"
+        android:textColor="@color/colorWhite"
+        android:drawableRight="@drawable/ic_directions_white_24dp"
+        android:text="Yol Tarifi Al"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/cardView" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

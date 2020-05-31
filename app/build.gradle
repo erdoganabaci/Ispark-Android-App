@@ -62,6 +62,9 @@ dependencies {
     implementation 'com.google.maps.android:android-maps-utils:0.5'
     implementation 'com.google.android.gms:play-services-location:16.0.0'
 
+    //shake detector
+    implementation 'com.squareup:seismic:1.0.2'
+
 
 
 

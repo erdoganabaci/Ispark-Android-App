@@ -3,9 +3,11 @@ package com.erdogan.istanbulispark;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,10 +42,12 @@ public class DetailParkActivity extends AppCompatActivity {
     ArrayList<String> parkAdiListDetail;
     String isparkName;
     String isparkParkID;
+    String isparkParkLat;
+    String isparkParkLon;
     TextView isparkNameTextView;
 
     private RequestQueue mQueue;
-
+    Button sendDetailGoogleMapButton;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,7 +55,8 @@ public class DetailParkActivity extends AppCompatActivity {
 
         //isparkDetailtextView = findViewById(R.id.isparkDetailtextView);
         isparkNameTextView = findViewById(R.id.isparkNameTextView);
-
+        //navigation button
+        sendDetailGoogleMapButton = findViewById(R.id.sendDetailGoogleMapButton);
         Intent intent = getIntent();
         isparkName = intent.getStringExtra("parkNameFromMain");
         isparkParkID = intent.getStringExtra("parkIDFromMain");
@@ -61,7 +66,18 @@ public class DetailParkActivity extends AppCompatActivity {
 
         getParkDetail();
         //getParkCost();
-        volleyTarife(isparkParkID);
+       // volleyTarife(isparkParkID);
+
+        sendDetailGoogleMapButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(getApplicationContext(),"Bizi Seçtiğiniz İçin Teşekkürler",Toast.LENGTH_SHORT).show();
+                Uri gmmIntentUri = Uri.parse("google.navigation:q="+isparkParkLat+","+isparkParkLon + "&mode=c");
+                Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+                mapIntent.setPackage("com.google.android.apps.maps");
+                startActivity(mapIntent);
+            }
+        });
     }
 
 
@@ -105,6 +121,9 @@ public class DetailParkActivity extends AppCompatActivity {
                                                //park.get(i).ilce;
                                                //isparkDetailtextView.setText(combine);
                                                //Log.d(TAG, "erdo " + ilce);
+                                               isparkParkID = parkId;
+                                               isparkParkLat = parkLat;
+                                               isparkParkLon = parkLon;
 
                                                isparkNameTextView.setText(parkName);
 
@@ -128,6 +147,8 @@ public class DetailParkActivity extends AppCompatActivity {
                                public void onComplete() {
                                    //Toast.makeText(getApplicationContext(),"succes",Toast.LENGTH_LONG).show();
                                    //isparkProgressBar.setVisibility(View.INVISIBLE);
+                                   volleyTarife(isparkParkID);
+
                                }
                            }
                 );
