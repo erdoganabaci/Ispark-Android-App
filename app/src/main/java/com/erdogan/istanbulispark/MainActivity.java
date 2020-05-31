@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
                 Intent intent = new Intent(getApplicationContext(),DetailParkActivity.class);
                 intent.putExtra("parkNameFromMain",MyParkObject.toString());
                 intent.putExtra("parkIDFromMain",parkForMain.get(MyParkObject.toString()));
-                //startActivity(intent);
+                startActivity(intent);
 
             }
         });

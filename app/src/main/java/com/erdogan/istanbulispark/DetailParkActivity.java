@@ -40,6 +40,7 @@ public class DetailParkActivity extends AppCompatActivity {
     ArrayList<String> parkAdiListDetail;
     String isparkName;
     String isparkParkID;
+    TextView isparkNameTextView;
 
     private RequestQueue mQueue;
 
@@ -49,6 +50,7 @@ public class DetailParkActivity extends AppCompatActivity {
         setContentView(R.layout.activity_detail_park);
 
         //isparkDetailtextView = findViewById(R.id.isparkDetailtextView);
+        isparkNameTextView = findViewById(R.id.isparkNameTextView);
 
         Intent intent = getIntent();
         isparkName = intent.getStringExtra("parkNameFromMain");
@@ -103,6 +105,8 @@ public class DetailParkActivity extends AppCompatActivity {
                                                //park.get(i).ilce;
                                                //isparkDetailtextView.setText(combine);
                                                //Log.d(TAG, "erdo " + ilce);
+
+                                               isparkNameTextView.setText(parkName);
 
                                            }
                                        }
